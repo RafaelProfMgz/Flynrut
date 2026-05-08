@@ -1,11 +1,11 @@
 [package]
 name = "rust_ide"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["angel"]
-description = "Modular, fast terminal IDE with native git, LSP, lazygit, lazydocker, MCP and AI integration"
-keywords = ["ide", "tui", "editor", "lsp", "git"]
-categories = ["command-line-utilities", "development-tools"]
+description = "Modular, fast GUI IDE with native git, LSP, lazygit, lazydocker, MCP and AI integration"
+keywords = ["ide", "gui", "editor", "lsp", "git"]
+categories = ["gui", "development-tools"]
 readme = "README.md"
 license = "MIT"
 
@@ -34,15 +34,14 @@ strip = true
 
 [dependencies]
 anyhow = "1.0.102"
-crossterm = "0.28.1"
 directories = "6.0.0"
 git2 = "0.20.4"
+iced = { version = "0.14.0", features = ["advanced", "svg", "wgpu"] }
 lsp-types = "0.97.0"
-ratatui = "0.29.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+syntect = { version = "5.2.0", default-features = false, features = ["default-syntaxes", "default-themes", "regex-onig"] }
 toml = "1.1.2"
-tui-textarea = "0.7.0"
 walkdir = "2.5.0"
 
 [dev-dependencies]

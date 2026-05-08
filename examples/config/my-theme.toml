@@ -1,0 +1,40 @@
+# rust-ide — tema customizado
+# Localização: ~/.config/rust-ide/themes/<nome>.toml
+# Todos os campos são opcionais; apenas sobrescreva os que quiser.
+# Cores no formato "#RRGGBB" ou "#RGB" (hex, 3 ou 6 dígitos).
+
+# ─── Barra de status ───────────────────────────────────────────────────────────
+status_bg = "#005f87"
+status_fg = "#ffffff"
+
+# ─── Árvore de arquivos (sidebar esquerda) ────────────────────────────────────
+sidebar_bg       = "#1c1c1c"
+sidebar_fg       = "#d0d0d0"
+sidebar_selected = "#005f87"   # fundo do item selecionado
+sidebar_dir      = "#87afff"   # cor de diretórios
+sidebar_file     = "#d0d0d0"   # cor de arquivos comuns
+
+# ─── Painel do editor ─────────────────────────────────────────────────────────
+editor_bg      = "#121212"
+editor_fg      = "#e4e4e4"
+editor_cursor  = "#ffff00"
+editor_selection = "#005f87"
+
+# ─── Bordas e títulos dos painéis ─────────────────────────────────────────────
+border_active   = "#87afff"   # painel com foco
+border_inactive = "#4e4e4e"
+title_active    = "#87afff"
+title_inactive  = "#808080"
+
+# ─── Diagnósticos LSP ─────────────────────────────────────────────────────────
+diag_error   = "#ff5f5f"
+diag_warning = "#ffaf00"
+diag_info    = "#87afff"
+diag_hint    = "#5faf5f"
+
+# ─── Git ──────────────────────────────────────────────────────────────────────
+git_added    = "#5faf5f"
+git_modified = "#ffaf00"
+git_deleted  = "#ff5f5f"
+git_renamed  = "#87afff"
+git_untracked = "#d0d0d0"

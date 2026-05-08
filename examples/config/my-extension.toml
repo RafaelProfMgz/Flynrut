@@ -1,0 +1,64 @@
+# rust-ide — extensão exemplo
+# Localização: ~/.config/rust-ide/extensions/<nome>.toml
+# Coloque quantos arquivos .toml quiser nessa pasta; todos são carregados na inicialização.
+
+# ─── Metadados ────────────────────────────────────────────────────────────────
+name        = "minha-extensao"
+version     = "0.1.0"
+description = "Extensão de exemplo com atalhos e ferramentas extras"
+
+# ─── Atalhos de teclado ───────────────────────────────────────────────────────
+# "key"     — sequência exata que aparecerá na barra de status / paleta de comandos
+# "command" — identificador interno do comando (string livre, sem espaços)
+# "description" — texto exibido na paleta de comandos
+
+[[keybindings]]
+key         = "Ctrl-P"
+command     = "open_file_picker"
+description = "Abre o seletor de arquivos (Telescope-style)"
+
+[[keybindings]]
+key         = "Ctrl-Shift-G"
+command     = "open_lazygit"
+description = "Abre o lazygit em painel flutuante"
+
+[[keybindings]]
+key         = "F5"
+command     = "run_tests"
+description = "Executa cargo test no workspace atual"
+
+# ─── Ferramentas externas ─────────────────────────────────────────────────────
+# "name"    — rótulo exibido na sidebar de integrações
+# "command" — comando executado no shell (pode usar $WORKSPACE, $FILE, $LINE)
+# "description" — tooltip na paleta de comandos
+
+[[tools]]
+name        = "cargo-fmt"
+command     = "cargo fmt --all"
+description = "Formata todo o código com rustfmt"
+
+[[tools]]
+name        = "cargo-clippy"
+command     = "cargo clippy --all-targets -- -D warnings"
+description = "Executa linter clippy com modo estrito"
+
+[[tools]]
+name        = "just"
+command     = "just"
+description = "Executa o Justfile no workspace"
+
+# ─── Tipos de arquivo ─────────────────────────────────────────────────────────
+# Mapeamento extensão → linguagem (usado para ativar realce e LSP correto)
+# A extensão NÃO deve ter ponto; a linguagem é uma string livre.
+
+[filetypes]
+"rs"    = "rust"
+"toml"  = "toml"
+"md"    = "markdown"
+"json"  = "json"
+"yaml"  = "yaml"
+"yml"   = "yaml"
+"sh"    = "bash"
+"py"    = "python"
+"ts"    = "typescript"
+"tsx"   = "typescript"

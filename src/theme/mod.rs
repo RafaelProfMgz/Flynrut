@@ -1,4 +1,3 @@
-use ratatui::style::Color;
 use serde::Deserialize;
 
 /// TOML-serialisable RGB color (`"#RRGGBB"` or `"#RGB"`).
@@ -7,8 +6,8 @@ pub struct ThemeColor(pub u8, pub u8, pub u8);
 
 impl ThemeColor {
     #[must_use]
-    pub fn to_ratatui(self) -> Color {
-        Color::Rgb(self.0, self.1, self.2)
+    pub const fn components(self) -> (u8, u8, u8) {
+        (self.0, self.1, self.2)
     }
 }
 
@@ -26,42 +25,30 @@ impl<'de> Deserialize<'de> for ThemeColor {
 /// All color tokens used by the IDE UI.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ThemeColors {
-    // Editor
     pub editor_bg: ThemeColor,
     pub editor_fg: ThemeColor,
     pub editor_cursor_line_bg: ThemeColor,
     pub editor_selection_bg: ThemeColor,
     pub editor_line_number_fg: ThemeColor,
-
-    // File tree
     pub tree_bg: ThemeColor,
     pub tree_fg: ThemeColor,
     pub tree_selected_bg: ThemeColor,
     pub tree_selected_fg: ThemeColor,
     pub tree_dir_fg: ThemeColor,
-
-    // Sidebar / status
     pub sidebar_bg: ThemeColor,
     pub sidebar_fg: ThemeColor,
     pub status_bg: ThemeColor,
     pub status_fg: ThemeColor,
-
-    // Borders
     pub border_normal: ThemeColor,
     pub border_focused: ThemeColor,
-
-    // Diagnostics
     pub diag_error: ThemeColor,
     pub diag_warning: ThemeColor,
     pub diag_info: ThemeColor,
-
-    // Git status colors
     pub git_added: ThemeColor,
     pub git_modified: ThemeColor,
     pub git_deleted: ThemeColor,
 }
 
-/// TOML file on disk — all fields optional, missing ones fall back to the base theme.
 #[derive(Debug, Default, Deserialize)]
 struct ThemeFile {
     editor_bg: Option<ThemeColor>,
@@ -89,7 +76,6 @@ struct ThemeFile {
 }
 
 impl ThemeColors {
-    /// Load a named built-in theme.  Falls back to `dark` for unknown names.
     #[must_use]
     pub fn builtin(name: &str) -> Self {
         match name {
@@ -101,8 +87,6 @@ impl ThemeColors {
         }
     }
 
-    /// Load from a TOML file, merging with the built-in base theme.
-    ///
     /// # Errors
     /// Returns an error if the file cannot be read or parsed.
     pub fn load_from_file(path: &std::path::Path, base: Self) -> anyhow::Result<Self> {
@@ -144,33 +128,31 @@ impl ThemeColors {
         }
     }
 
-    // ──────────────────────────── built-in themes ────────────────────────────
-
     #[must_use]
     pub fn dark() -> Self {
         Self {
-            editor_bg: ThemeColor(30, 30, 30),
-            editor_fg: ThemeColor(212, 212, 212),
-            editor_cursor_line_bg: ThemeColor(45, 45, 45),
-            editor_selection_bg: ThemeColor(60, 60, 60),
-            editor_line_number_fg: ThemeColor(90, 90, 90),
-            tree_bg: ThemeColor(25, 25, 25),
-            tree_fg: ThemeColor(200, 200, 200),
-            tree_selected_bg: ThemeColor(55, 55, 100),
+            editor_bg: ThemeColor(26, 26, 46),
+            editor_fg: ThemeColor(224, 230, 237),
+            editor_cursor_line_bg: ThemeColor(35, 35, 60),
+            editor_selection_bg: ThemeColor(56, 70, 110),
+            editor_line_number_fg: ThemeColor(110, 120, 150),
+            tree_bg: ThemeColor(22, 22, 38),
+            tree_fg: ThemeColor(206, 214, 224),
+            tree_selected_bg: ThemeColor(60, 76, 122),
             tree_selected_fg: ThemeColor(255, 255, 255),
-            tree_dir_fg: ThemeColor(130, 180, 255),
-            sidebar_bg: ThemeColor(28, 28, 28),
-            sidebar_fg: ThemeColor(180, 180, 180),
-            status_bg: ThemeColor(0, 90, 180),
-            status_fg: ThemeColor(255, 255, 255),
-            border_normal: ThemeColor(60, 60, 60),
-            border_focused: ThemeColor(0, 120, 215),
-            diag_error: ThemeColor(240, 80, 80),
-            diag_warning: ThemeColor(230, 180, 80),
-            diag_info: ThemeColor(80, 180, 240),
-            git_added: ThemeColor(80, 200, 120),
-            git_modified: ThemeColor(220, 180, 80),
-            git_deleted: ThemeColor(220, 80, 80),
+            tree_dir_fg: ThemeColor(130, 196, 255),
+            sidebar_bg: ThemeColor(24, 24, 42),
+            sidebar_fg: ThemeColor(192, 199, 214),
+            status_bg: ThemeColor(53, 99, 193),
+            status_fg: ThemeColor(245, 247, 250),
+            border_normal: ThemeColor(48, 58, 84),
+            border_focused: ThemeColor(95, 170, 255),
+            diag_error: ThemeColor(240, 92, 92),
+            diag_warning: ThemeColor(235, 190, 90),
+            diag_info: ThemeColor(112, 189, 255),
+            git_added: ThemeColor(104, 211, 145),
+            git_modified: ThemeColor(235, 190, 90),
+            git_deleted: ThemeColor(240, 92, 92),
         }
     }
 
@@ -311,10 +293,8 @@ pub(crate) fn parse_hex_color(s: &str) -> Option<ThemeColor> {
 mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]
     use super::*;
-    use std::io::Write;
+    use std::{io::Write, path::Path};
     use tempfile::NamedTempFile;
-
-    // ── parse_hex_color ──────────────────────────────────────────────────────
 
     #[test]
     fn parse_rrggbb() {
@@ -341,12 +321,10 @@ mod tests {
         assert_eq!(parse_hex_color("  #ff0000  "), Some(ThemeColor(255, 0, 0)));
     }
 
-    // ── builtin themes ───────────────────────────────────────────────────────
-
     #[test]
     fn dark_theme_loads() {
         let t = ThemeColors::builtin("dark");
-        assert_eq!(t.editor_bg, ThemeColor(30, 30, 30));
+        assert_eq!(t.editor_bg, ThemeColor(26, 26, 46));
     }
 
     #[test]
@@ -354,7 +332,7 @@ mod tests {
         let t = ThemeColors::builtin("gruvbox");
         assert_ne!(
             t.editor_bg,
-            ThemeColor(30, 30, 30),
+            ThemeColor(26, 26, 46),
             "gruvbox differs from dark"
         );
     }
@@ -380,10 +358,8 @@ mod tests {
     #[test]
     fn unknown_theme_falls_back_to_dark() {
         let t = ThemeColors::builtin("does-not-exist");
-        assert_eq!(t.editor_bg, ThemeColor(30, 30, 30));
+        assert_eq!(t.editor_bg, ThemeColor(26, 26, 46));
     }
-
-    // ── load_from_file ───────────────────────────────────────────────────────
 
     #[test]
     fn file_overrides_only_specified_fields() {
@@ -407,19 +383,14 @@ mod tests {
 
     #[test]
     fn invalid_file_path_returns_error() {
-        let result = ThemeColors::load_from_file(
-            std::path::Path::new("/tmp/nonexistent_theme_xyz.toml"),
-            ThemeColors::dark(),
-        );
+        let result =
+            ThemeColors::load_from_file(Path::new("missing_theme_xyz.toml"), ThemeColors::dark());
         assert!(result.is_err());
     }
 
-    // ── ThemeColor::to_ratatui ───────────────────────────────────────────────
-
     #[test]
-    fn to_ratatui_returns_rgb() {
-        use ratatui::style::Color;
+    fn components_return_rgb_values() {
         let c = ThemeColor(10, 20, 30);
-        assert_eq!(c.to_ratatui(), Color::Rgb(10, 20, 30));
+        assert_eq!(c.components(), (10, 20, 30));
     }
 }

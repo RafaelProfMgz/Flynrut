@@ -1,0 +1,65 @@
+# ~/.config/rust-ide/keybindings.toml
+#
+# Configuração de atalhos de teclado do rust-ide.
+#
+# Todos os campos são OPCIONAIS — você só precisa especificar os atalhos
+# que quer mudar. Os campos omitidos mantêm os valores padrão.
+#
+# Formato de teclas
+# -----------------
+#   Teclas simples  : "g", "s", "Escape"
+#   Com modificador : "Ctrl+S", "Shift+Tab", "Alt+F4", "Ctrl+Shift+P"
+#   Múltiplos alts  : ["Up", "k"]        (qualquer dos dois funciona)
+#   Teclas nomeadas : "Tab", "Enter", "Up", "Down", "Left", "Right"
+#                     "Backspace", "Delete", "Home", "End"
+#                     "PageUp", "PageDown", "F1" … "F12"
+#
+# Modificadores válidos: Ctrl, Shift, Alt  (separados por "+")
+# Teclas não diferenciam maiúsculas: "ctrl+s" == "Ctrl+S"
+
+# ── Globais ──────────────────────────────────────────────────────────────────
+# Ativas independentemente de qual painel está em foco.
+
+[global]
+save        = "Ctrl+S"       # Salva o arquivo atual
+refresh     = "Ctrl+R"       # Atualiza árvore + git + LSP
+quit        = "Ctrl+Q"       # Encerra o IDE
+focus_next  = "Tab"          # Move foco: Árvore → Editor → Sidebar → ...
+focus_prev  = "Shift+Tab"    # Move foco na direção inversa
+
+# ── Ferramentas externas ──────────────────────────────────────────────────────
+# Abrem o programa configurado em config.toml na seção [tools].
+
+[tools]
+lazygit     = "g"            # Abre lazygit
+lazydocker  = "d"            # Abre lazydocker
+ai          = "a"            # Abre cliente de IA
+mcp         = "m"            # Abre cliente MCP
+restart_lsp = "l"            # Reinicia / reconecta o LSP
+
+# ── Navegação na árvore de arquivos ──────────────────────────────────────────
+# Ativas quando a Árvore de Arquivos está em foco.
+
+[tree]
+move_up   = ["Up", "k"]               # Move seleção para cima  (estilo vim: k)
+move_down = ["Down", "j"]             # Move seleção para baixo (estilo vim: j)
+open      = ["Enter", "Right", "o"]   # Abre arquivo / expande diretório
+go_parent = ["Left", "h"]             # Sobe ao diretório pai   (estilo vim: h)
+
+# ── Exemplos de customização ──────────────────────────────────────────────────
+# Descomente e ajuste conforme preferência.
+
+# Trocar Ctrl+Q por Ctrl+W para fechar:
+# [global]
+# quit = "Ctrl+W"
+
+# Abrir lazygit com Ctrl+G ao invés de "g":
+# [tools]
+# lazygit = "Ctrl+G"
+
+# Navegar só com setas (remover atalhos vim):
+# [tree]
+# move_up   = "Up"
+# move_down = "Down"
+# open      = "Enter"
+# go_parent = "Left"

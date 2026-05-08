@@ -1,0 +1,20 @@
+[book]
+title = "rust-ide — Manual do Usuário"
+authors = ["angel"]
+description = "Manual completo de instalação, uso e configuração da IDE rust-ide"
+language = "pt-BR"
+src = "src"
+
+
+[output.html]
+default-theme = "coal"
+preferred-dark-theme = "coal"
+no-section-label = false
+fold.enable = true
+fold.level = 1
+
+[output.html.search]
+enable = true
+limit-results = 20
+boost-title = 2
+expand = true

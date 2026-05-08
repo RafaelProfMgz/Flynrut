@@ -18,6 +18,8 @@ pub struct AppConfig {
     pub extensions_dir: PathBuf,
     /// Directory where custom theme `.toml` files live.
     pub themes_dir: PathBuf,
+    /// Path to the user's `keybindings.toml` file.
+    pub keybindings_path: PathBuf,
 }
 
 #[derive(Debug, Clone)]
@@ -116,6 +118,7 @@ impl AppConfig {
             theme,
             extensions_dir: config_dir.join("extensions"),
             themes_dir: config_dir.join("themes"),
+            keybindings_path: config_dir.join("keybindings.toml"),
         })
     }
 }

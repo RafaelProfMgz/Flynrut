@@ -35,7 +35,7 @@ pub struct ExtTool {
 pub struct ExtensionManifest {
     /// Human-readable extension name.
     pub name: String,
-    /// SemVer version string, e.g. `"1.0.0"`.
+    /// `SemVer` version string, e.g. `"1.0.0"`.
     #[serde(default = "default_version")]
     pub version: String,
     /// Optional description.
@@ -90,9 +90,7 @@ impl ExtensionRegistry {
                 Err(e) => {
                     eprintln!(
                         "rust-ide: skipping extension {}: {e}",
-                        path.file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
+                        path.file_name().unwrap_or_default().to_string_lossy()
                     );
                 }
             }

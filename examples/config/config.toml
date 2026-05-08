@@ -1,0 +1,33 @@
+# rust-ide — configuração principal
+# Localização padrão: ~/.config/rust-ide/config.toml
+# Variáveis de ambiente têm prioridade sobre este arquivo.
+
+# ─── Tema ──────────────────────────────────────────────────────────────────────
+# Tema embutido: "dark" | "gruvbox" | "nord" | "dracula" | "light"
+# Para usar um tema customizado coloque um arquivo TOML em ~/.config/rust-ide/themes/
+# e defina o nome dele aqui (sem extensão), ex.: "my-theme"
+# Variável de ambiente: RUST_IDE_THEME
+theme = "dark"
+
+# ─── LSP ───────────────────────────────────────────────────────────────────────
+[lsp]
+# Binário do servidor LSP (deve estar no PATH ou ser caminho absoluto)
+command = "rust-analyzer"
+# Argumentos extras passados ao servidor
+args = []
+
+# ─── Ferramentas externas ──────────────────────────────────────────────────────
+[tools]
+# Cada ferramenta pode ter comando customizado; deixe em branco para usar o padrão do PATH.
+git     = "git"
+lazygit = "lazygit"
+lazydocker = "lazydocker"
+docker  = "docker"
+
+# ─── MCP / AI ──────────────────────────────────────────────────────────────────
+[ai]
+# Endpoint compatível com OpenAI Chat Completions (ou deixe vazio para desativar)
+# endpoint = "https://api.openai.com/v1/chat/completions"
+# Variável de ambiente recomendada para a chave: OPENAI_API_KEY
+model   = "gpt-4o-mini"
+enabled = false

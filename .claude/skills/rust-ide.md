@@ -15,9 +15,10 @@ Re-exports all public modules. Required for integration tests and external tooli
 
 ### `src/app/mod.rs`
 - **`App`** — main state container. Owns `FileTree`, `EditorModel`, `IntegrationState`, `LspClient`.
-- **`Focus`** — `Tree | Editor | Sidebar`; cycled with `Tab`/`BackTab`.
-- **`AppAction`** — returned by `handle_key`: `Continue | Quit | RunCommand(String)`.
-- Key methods: `new()`, `handle_key()`, `on_tick()`, `after_command()`.
+- **`Focus`** — `Tree | Editor | Sidebar`; now driven by GUI pane selection instead of terminal key events.
+- Key methods: `new()`, `on_tick()`, `cycle_focus_forward()`, `cycle_focus_backward()`,
+  `open_file()`, `open_tree_selection()`, `save_file()`, `save_content()`, `refresh()`,
+  `launch_tool()`, `restart_lsp()`.
 
 ### `src/config/mod.rs`
 - **`AppConfig`** — loaded once at startup. Sources: env vars > TOML file > defaults.
@@ -27,9 +28,10 @@ Re-exports all public modules. Required for integration tests and external tooli
 - Pure/testable: `parse_bool(value: &str) -> Option<bool>` (pub(crate)).
 
 ### `src/editor/mod.rs`
-- **`EditorModel`** — wraps `tui_textarea::TextArea<'static>`.
-- Key methods: `new()`, `open(path)`, `save()`, `contents()`, `handle_key()`, `textarea(focused)`.
-- Tracks dirty state; `title()` reflects it.
+- **`EditorModel`** — pure editor state without UI dependencies.
+- Stores `content: String`, `current_file: Option<PathBuf>`, and `dirty: bool`.
+- Key methods: `new()`, `open(path)`, `save()`, `save_content(text)`, `contents()`, `set_dirty()`.
+- `title()` reflects current file + dirty marker.
 - Pure/testable: `split_lines(content: &str) -> Vec<String>` (pub(crate)).
 
 ### `src/fs_tree/mod.rs`
@@ -56,27 +58,25 @@ Re-exports all public modules. Required for integration tests and external tooli
 - `drain()` must be called on each tick to process incoming messages non-blockingly.
 - Only syncs `.rs` files.
 
-### `src/ui/mod.rs`
-- `draw(frame, app)` — main entry point, called every render frame.
-- Three-panel layout: file tree (24%) | editor (48%) | sidebar (28%).
-- Sidebar sub-panels: Git info | Tool status | LSP diagnostics.
-- Status bar: 2-line bar with current message + keybinding hints.
+### `src/gui/mod.rs`
+- **`IdeApp`** — Iced application wrapper around `App`.
+- Uses `pane_grid` for a 3-pane layout: file tree (~22%) | editor (~54%) | sidebar (~24%).
+- Keeps `text_editor::Content` as GUI state and syncs it with `App::editor` on open/save.
+- `Message` handles pane clicks/resizes, editor actions, file tree selection, tool launch,
+  refresh/save requests, LSP restart, and periodic tick updates.
+- Submodules:
+  - `gui/file_tree.rs` — scrollable tree buttons with indentation and icons.
+  - `gui/editor.rs` — tab bar + line numbers + `iced::widget::text_editor`.
+  - `gui/sidebar.rs` — Git snapshot, tools, and LSP diagnostics.
+  - `gui/style.rs` — converts `ThemeColors` tokens into Iced styles.
 
-## Keybindings (app layer)
+## Interaction model
 
-| Key | Action |
-|---|---|
-| `Tab` / `BackTab` | Cycle focus: Tree → Editor → Sidebar |
-| `q` | Quit |
-| `Ctrl+S` | Save current file |
-| `Ctrl+R` | Refresh tree + integrations |
-| `g` | Launch lazygit |
-| `d` | Launch lazydocker |
-| `a` | Launch configured AI command |
-| `m` | Launch configured MCP command |
-| `l` | Connect/reconnect LSP |
-| `↑/k`, `↓/j` | Move tree selection |
-| `Enter/→/o` | Open file or toggle dir |
+- GUI-first flow with Iced 0.14 + wgpu.
+- Focus is derived from pane clicks and preserved in `App::focus`.
+- File tree entries are clickable buttons; selecting a directory toggles it, selecting a file opens it.
+- Save/refresh actions live in the status bar; tool launch + LSP restart live in the sidebar.
+- `IdeApp` schedules a 250ms tick task that calls `App::on_tick()`.
 
 ## Test locations
 
@@ -89,15 +89,22 @@ src/integrations/mod.rs #[cfg(test)] mod tests → binary_for_command, tool dete
 
 ## Dependency notes
 
-- `tui-textarea 0.7` requires `ratatui 0.29` and `crossterm 0.28` (not newer versions).
-- Do NOT upgrade ratatui/crossterm without verifying tui-textarea compatibility.
+- GUI stack: `iced 0.14` with `advanced`, `svg`, and `wgpu` features.
+- Editor widget: `iced::widget::text_editor`; business editor state stays in `EditorModel`.
+- `syntect 5.x` is available for future syntax highlighting work.
 - `git2` requires OpenSSL/libssh2 (installed via system package manager).
 
 ## Changelog
 
 - **v0.1.0** — Initial modular implementation: file tree, editor, git, LSP, tool integrations.
 - **v0.1.1** — Professional structure: subdirectory modules, unit tests, CLAUDE.md, skills.
-- **v0.1.2** — TDD cycle complete: 29 unit tests (config, editor, fs_tree, integrations); zero
-  clippy warnings with `pedantic` + `unwrap_used` + `expect_used` + `panic` lints enforced;
-  `# Errors` doc-comments on all public `Result`-returning functions; `#[must_use]` on pure
-  getters; `impl Default for EditorModel`; `if let` chains replace nested `if/match`.
+- **v0.1.2** — TDD cycle complete: 29 unit tests; zero clippy warnings with pedantic lints.
+- **v0.1.3** — Theme + extension system: `src/theme/mod.rs` (5 built-in themes, TOML merge),
+  `src/extensions/mod.rs` (manifest registry, keybindings, tools, filetypes); `App` now owns
+  `theme: ThemeColors` and `extensions: ExtensionRegistry`; all hardcoded colors replaced with
+  theme tokens; `render_sidebar` split into helper fns; 52 tests, 0 clippy errors;
+  `examples/config/` with annotated config.toml, my-theme.toml, my-extension.toml.
+- **v0.2.0** — Migration from terminal TUI to Iced GUI: removed `src/ui/`, rewrote
+  `EditorModel` as pure state, simplified `App` for GUI-driven actions, added `src/gui/`
+  (`mod`, `style`, `file_tree`, `editor`, `sidebar`), and updated `main.rs` to launch
+  the Iced application.
