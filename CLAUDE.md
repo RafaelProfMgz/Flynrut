@@ -6,8 +6,8 @@ Guia de desenvolvimento para agentes de IA (Claude, Copilot, etc.) trabalhando n
 
 ## Visão geral
 
-`rust-ide` é uma IDE terminal modular escrita em Rust.  
-TUI com `ratatui` + `tui-textarea`, LSP nativo, integração com `lazygit`, `lazydocker`, AI e MCP.
+`rust-ide` é uma IDE gráfica modular escrita em Rust.  
+GUI com `iced`, LSP nativo, integração com `lazygit`, `lazydocker`, AI e MCP.
 
 ## Convenções de código
 
@@ -22,18 +22,35 @@ TUI com `ratatui` + `tui-textarea`, LSP nativo, integração com `lazygit`, `laz
 
 ## Arquitetura de módulos
 
-```
+```text
 src/
-  lib.rs           ← re-exporta módulos públicos; usado nos testes de integração
-  main.rs          ← entrypoint; loop de eventos e terminal TUI
-  app/mod.rs       ← estado global da aplicação, roteamento de teclas, ações
-  config/mod.rs    ← carregamento de config (TOML + envvars)
-  editor/mod.rs    ← EditorModel: abertura, edição, salvamento de arquivos
-  fs_tree/mod.rs   ← FileTree: árvore de arquivos com navegação e toggle
+  lib.rs               ← re-exporta módulos públicos; usado nos testes de integração
+  main.rs              ← entrypoint; carrega config, inicia GUI Iced
+  app/mod.rs           ← estado global da aplicação, roteamento de teclas, ações
+  config/mod.rs        ← carregamento de config (TOML + envvars), inclui DocsSettings
+  editor/mod.rs        ← EditorModel: abertura, edição, salvamento de arquivos
+  fs_tree/mod.rs       ← FileTree: árvore de arquivos com navegação e toggle
   integrations/mod.rs  ← git status nativo (git2), detecção de ferramentas
-  lsp/mod.rs       ← cliente LSP enxuto (didOpen/didChange/didSave, diagnósticos)
-  ui/mod.rs        ← layout e renderização dos painéis ratatui
+  keybindings/mod.rs   ← configuração de atalhos via TOML (~/.config/rust-ide/keybindings.toml)
+  lsp/mod.rs           ← cliente LSP enxuto (didOpen/didChange/didSave, diagnósticos)
+  gui/
+    mod.rs             ← IdeApp (Iced): layout 3 painéis, messages, key_to_message
+    editor.rs          ← widget do editor
+    file_tree.rs       ← widget da árvore de arquivos
+    sidebar.rs         ← sidebar normal + painel de configurações (settings_open)
+    style.rs           ← estilos visuais
+  theme/mod.rs         ← temas embutidos e customizados
+  extensions/mod.rs    ← registro de extensões
 ```
+
+## Regra de documentação
+
+**Sempre que adicionar ou alterar funcionalidades, você DEVE:**
+
+1. Atualizar o `README.md` — atalhos, configuração, como rodar.
+2. Atualizar o arquivo relevante em `docs/src/` (use a estrutura do `docs/src/SUMMARY.md`).
+3. Atualizar `examples/config/keybindings.toml` e `examples/config/config.toml` se houver novos campos.
+4. Se criar novos arquivos de skill em `.claude/skills/`, registrá-los neste `CLAUDE.md`.
 
 ## Fluxo TDD obrigatório
 
@@ -42,7 +59,7 @@ src/
 1. **RED** — Escreva o(s) teste(s) que definem o comportamento esperado ANTES de qualquer implementação. Rode `cargo test` e confirme que o(s) teste(s) falha(m) ou não compilam.
 2. **GREEN** — Escreva a implementação mínima para fazer os testes passarem. Rode `cargo test` novamente e confirme 100% de aprovação.
 3. **REFACTOR** — Limpe o código sem quebrar os testes. Rode `cargo test` uma última vez.
-4. **FINALIZE** — Atualize os arquivos de skill em `.claude/skills/` para refletir mudanças relevantes.
+4. **FINALIZE** — Atualize docs, README e exemplos conforme a regra de documentação acima.
 
 Nunca finalize uma tarefa com testes falhando.
 
@@ -61,6 +78,7 @@ cargo test
 # Testes de um módulo específico
 cargo test fs_tree
 cargo test config
+cargo test keybindings
 
 # Lint
 cargo clippy --all-targets -- -D warnings
@@ -68,6 +86,11 @@ cargo clippy --all-targets -- -D warnings
 # Formatar
 cargo fmt --check        # verificar
 cargo fmt                # aplicar
+
+# Documentação — rodar localmente
+mdbook serve docs/                    # porta 3000 (padrão)
+mdbook serve --port 3001 docs/        # porta alternativa
+mdbook build docs/                    # gerar HTML estático
 ```
 
 ## Configuração
@@ -84,12 +107,17 @@ lazygit = "lazygit"
 lazydocker = "lazydocker"
 ai = "claude"
 mcp = "npx @modelcontextprotocol/inspector"
+
+[docs]
+port = 3000   # Porta do mdbook serve (RUST_IDE_DOCS_PORT sobrescreve)
 ```
 
 Variáveis de ambiente sobrescrevem o arquivo:
+
 - `RUST_IDE_LSP_COMMAND`, `RUST_IDE_LSP_ENABLED`
 - `RUST_IDE_LAZYGIT_COMMAND`, `RUST_IDE_LAZYDOCKER_COMMAND`
 - `RUST_IDE_AI_COMMAND`, `RUST_IDE_MCP_COMMAND`
+- `RUST_IDE_THEME`, `RUST_IDE_DOCS_PORT`
 
 ## Skills do Claude
 

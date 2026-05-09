@@ -56,6 +56,14 @@ pub struct GlobalKeys {
     pub focus_next: KeyList,
     /// Move focus to the previous pane.
     pub focus_prev: KeyList,
+    /// Jump directly to the file tree pane.
+    pub focus_tree: KeyList,
+    /// Jump directly to the editor pane.
+    pub focus_editor: KeyList,
+    /// Jump directly to the sidebar pane.
+    pub focus_sidebar: KeyList,
+    /// Open / close the settings panel.
+    pub open_settings: KeyList,
 }
 
 /// Keybindings that launch external tools.
@@ -103,6 +111,10 @@ impl Default for KeybindingsConfig {
                 quit: KeyList::Single("Ctrl+Q".into()),
                 focus_next: KeyList::Single("Tab".into()),
                 focus_prev: KeyList::Single("Shift+Tab".into()),
+                focus_tree: KeyList::Single("Ctrl+1".into()),
+                focus_editor: KeyList::Single("Ctrl+2".into()),
+                focus_sidebar: KeyList::Single("Ctrl+3".into()),
+                open_settings: KeyList::Single("Ctrl+,".into()),
             },
             tools: ToolKeys {
                 lazygit: KeyList::Single("g".into()),
@@ -169,6 +181,26 @@ impl KeybindingsConfig {
                     .as_ref()
                     .and_then(|g| g.focus_prev.clone())
                     .unwrap_or(base.global.focus_prev),
+                focus_tree: overrides
+                    .global
+                    .as_ref()
+                    .and_then(|g| g.focus_tree.clone())
+                    .unwrap_or(base.global.focus_tree),
+                focus_editor: overrides
+                    .global
+                    .as_ref()
+                    .and_then(|g| g.focus_editor.clone())
+                    .unwrap_or(base.global.focus_editor),
+                focus_sidebar: overrides
+                    .global
+                    .as_ref()
+                    .and_then(|g| g.focus_sidebar.clone())
+                    .unwrap_or(base.global.focus_sidebar),
+                open_settings: overrides
+                    .global
+                    .as_ref()
+                    .and_then(|g| g.open_settings.clone())
+                    .unwrap_or(base.global.open_settings),
             },
             tools: ToolKeys {
                 lazygit: overrides
@@ -239,6 +271,10 @@ struct DiskGlobalKeys {
     quit: Option<KeyList>,
     focus_next: Option<KeyList>,
     focus_prev: Option<KeyList>,
+    focus_tree: Option<KeyList>,
+    focus_editor: Option<KeyList>,
+    focus_sidebar: Option<KeyList>,
+    open_settings: Option<KeyList>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -458,5 +494,40 @@ mod tests {
         write!(f, "this is not valid toml ][[[").unwrap();
         let cfg = KeybindingsConfig::load_from_file(f.path()).unwrap();
         assert!(cfg.global.save.matches("Ctrl+S"), "falls back to defaults");
+    }
+
+    // ── New direct-focus defaults ────────────────────────────────────────────
+
+    #[test]
+    fn default_focus_tree_is_ctrl_1() {
+        let cfg = KeybindingsConfig::default();
+        assert!(cfg.global.focus_tree.matches("Ctrl+1"));
+    }
+
+    #[test]
+    fn default_focus_editor_is_ctrl_2() {
+        let cfg = KeybindingsConfig::default();
+        assert!(cfg.global.focus_editor.matches("Ctrl+2"));
+    }
+
+    #[test]
+    fn default_focus_sidebar_is_ctrl_3() {
+        let cfg = KeybindingsConfig::default();
+        assert!(cfg.global.focus_sidebar.matches("Ctrl+3"));
+    }
+
+    #[test]
+    fn default_open_settings_is_ctrl_comma() {
+        let cfg = KeybindingsConfig::default();
+        assert!(cfg.global.open_settings.matches("Ctrl+,"));
+    }
+
+    #[test]
+    fn load_overrides_focus_tree() {
+        let mut f = NamedTempFile::new().unwrap();
+        write!(f, "[global]\nfocus_tree = \"Ctrl+F1\"").unwrap();
+        let cfg = KeybindingsConfig::load_from_file(f.path()).unwrap();
+        assert!(cfg.global.focus_tree.matches("Ctrl+F1"));
+        assert!(!cfg.global.focus_tree.matches("Ctrl+1"));
     }
 }

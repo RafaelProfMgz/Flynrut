@@ -3,7 +3,7 @@ pub mod file_tree;
 pub mod sidebar;
 pub mod style;
 
-use std::{cell::RefCell, process::Command, time::Duration};
+use std::{cell::RefCell, path::PathBuf, process::Command, time::Duration};
 
 use anyhow::Result;
 use iced::{
@@ -38,9 +38,19 @@ pub enum Message {
     RestartLsp,
     FocusNext,
     FocusPrev,
+    /// Jump directly to a specific pane.
+    FocusTree,
+    FocusEditor,
+    FocusSidebar,
     TreeMoveUp,
     TreeMoveDown,
     TreeOpen,
+    /// Toggle the settings panel open/closed.
+    ToggleSettings,
+    /// Open a config file in the editor.
+    OpenConfigFile(PathBuf),
+    /// Launch mdbook serve with the configured port.
+    LaunchDocs,
     QuitRequested,
     /// No-op: produced by unhandled keyboard events.
     Ignored,
@@ -51,6 +61,8 @@ pub struct IdeApp {
     pub app: App,
     pub editor_content: text_editor::Content,
     pane_state: pane_grid::State<PaneKind>,
+    /// Whether the settings panel is currently open.
+    pub settings_open: bool,
 }
 
 impl IdeApp {
@@ -63,6 +75,7 @@ impl IdeApp {
                 app,
                 editor_content,
                 pane_state,
+                settings_open: false,
             },
             Self::next_tick(),
         )
@@ -193,6 +206,41 @@ impl IdeApp {
                 self.app.cycle_focus_backward();
                 Task::none()
             }
+            Message::FocusTree => {
+                self.app.focus = crate::app::Focus::Tree;
+                Task::none()
+            }
+            Message::FocusEditor => {
+                self.app.focus = crate::app::Focus::Editor;
+                Task::none()
+            }
+            Message::FocusSidebar => {
+                self.app.focus = crate::app::Focus::Sidebar;
+                Task::none()
+            }
+            Message::ToggleSettings => {
+                self.settings_open = !self.settings_open;
+                Task::none()
+            }
+            Message::OpenConfigFile(path) => {
+                if let Err(error) = self.app.open_file(&path) {
+                    self.app
+                        .set_status(format!("Erro ao abrir config: {error}"));
+                } else {
+                    self.sync_editor_from_app();
+                }
+                Task::none()
+            }
+            Message::LaunchDocs => {
+                let port = self.app.config.docs.port;
+                let command = format!("mdbook serve --port {port} docs/");
+                self.app
+                    .set_status(format!("Iniciando docs na porta {port}..."));
+                Task::perform(
+                    async move { spawn_shell_command(&command) },
+                    Message::CommandFinished,
+                )
+            }
             Message::TreeMoveUp => {
                 self.app.tree_move_up();
                 Task::none()
@@ -231,7 +279,7 @@ impl IdeApp {
                     focused,
                     theme,
                 ),
-                PaneKind::Sidebar => sidebar::view(&self.app),
+                PaneKind::Sidebar => sidebar::view(&self.app, self.settings_open),
             };
 
             let title = match kind {
@@ -288,6 +336,7 @@ impl IdeApp {
                     row![
                         action_button("Salvar", Message::SaveRequested, theme),
                         action_button("Atualizar", Message::RefreshRequested, theme),
+                        action_button("Configurações", Message::ToggleSettings, theme),
                     ]
                     .spacing(8)
                     .align_y(Alignment::Center)
@@ -476,6 +525,18 @@ fn key_to_message(
     }
     if bindings.global.focus_prev.matches(&key_str) {
         return Some(Message::FocusPrev);
+    }
+    if bindings.global.focus_tree.matches(&key_str) {
+        return Some(Message::FocusTree);
+    }
+    if bindings.global.focus_editor.matches(&key_str) {
+        return Some(Message::FocusEditor);
+    }
+    if bindings.global.focus_sidebar.matches(&key_str) {
+        return Some(Message::FocusSidebar);
+    }
+    if bindings.global.open_settings.matches(&key_str) {
+        return Some(Message::ToggleSettings);
     }
 
     // Tool launch bindings
