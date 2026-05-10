@@ -21,11 +21,15 @@
 # Ativas independentemente de qual painel está em foco.
 
 [global]
-save        = "Ctrl+S"       # Salva o arquivo atual
-refresh     = "Ctrl+R"       # Atualiza árvore + git + LSP
-quit        = "Ctrl+Q"       # Encerra o IDE
-focus_next  = "Tab"          # Move foco: Árvore → Editor → Sidebar → ...
-focus_prev  = "Shift+Tab"    # Move foco na direção inversa
+save          = "Ctrl+S"       # Salva o arquivo atual
+refresh       = "Ctrl+R"       # Atualiza árvore + git + LSP
+quit          = "Ctrl+Q"       # Encerra o IDE
+focus_next    = "Tab"          # Move foco: Árvore → Editor → Sidebar → ...
+focus_prev    = "Shift+Tab"    # Move foco na direção inversa
+focus_tree    = "Ctrl+1"       # Foco direto na Árvore de Arquivos
+focus_editor  = "Ctrl+2"       # Foco direto no Editor
+focus_sidebar = "Ctrl+3"       # Foco direto na Sidebar
+open_settings = "Ctrl+,"       # Abre / fecha o painel de Configurações
 
 # ── Ferramentas externas ──────────────────────────────────────────────────────
 # Abrem o programa configurado em config.toml na seção [tools].

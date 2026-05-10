@@ -31,3 +31,9 @@ docker  = "docker"
 # Variável de ambiente recomendada para a chave: OPENAI_API_KEY
 model   = "gpt-4o-mini"
 enabled = false
+
+# ─── Documentação ──────────────────────────────────────────────────────────────
+[docs]
+# Porta usada por `mdbook serve`. Mude se a 3000 estiver ocupada.
+# Variável de ambiente: RUST_IDE_DOCS_PORT
+port = 3000
